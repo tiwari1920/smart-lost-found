@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ item.title }} | CampusFind{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      {% if item.image %}
+        <img src="{{ item.image.url }}" class="card-img-top bg-white p-2"
+             alt="Photo of {{ item.title }}" style="max-height: 360px; object-fit: contain;">
+      {% endif %}
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <h2 class="h4 mb-0">{{ item.title }}</h2>
+          <span class="badge {{ item.status_badge_class }}">{{ item.get_status_display }}</span>
+        </div>
+        <p class="text-muted small">
+          {{ item.get_item_type_display }} report by {{ item.user.username }}
+          &middot; {{ item.created_at|date:"d M Y" }}
+        </p>
+
+        <p>{{ item.description|linebreaksbr }}</p>
+
+        <table class="table table-sm">
+          <tr><th scope="row" class="w-25">Category</th><td>{{ item.get_category_display }}</td></tr>
+          <tr><th scope="row">Brand</th><td>{{ item.brand|default:"-" }}</td></tr>
+          <tr><th scope="row">Colour</th><td>{{ item.color }}</td></tr>
+          <tr><th scope="row">Location</th><td>{{ item.get_location_display }}</td></tr>
+          <tr><th scope="row">Date</th><td>{{ item.date|date:"d M Y" }}</td></tr>
+          <tr><th scope="row">Time</th><td>{{ item.time|time:"h:i A"|default:"-" }}</td></tr>
+        </table>
+
+        {% if item.user_id == user.id %}
+          <hr>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'item_edit' item.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
+            <a href="{% url 'item_delete' item.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
+            {% if item.status != 'RECOVERED' and item.status != 'CLOSED' %}
+              <form method="post" action="{% url 'item_change_status' item.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="RECOVERED">
+                <button type="submit" class="btn btn-success btn-sm">Mark as recovered</button>
+              </form>
+              <form method="post" action="{% url 'item_change_status' item.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="CLOSED">
+                <button type="submit" class="btn btn-secondary btn-sm">Close report</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

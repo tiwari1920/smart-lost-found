@@ -3,13 +3,18 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from  django.contrib.auth.models import User
 
 class BootstrapFormMixin:
-    """
-    Mixin to add Bootstrap classes to form fields.
-    """
+    """Adds the right Bootstrap class to every field."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
-            field.widget.attrs['class'] = 'form-control'
+            if isinstance(field.widget, forms.Select):
+                css = 'form-select'
+            elif isinstance(field.widget, forms.CheckboxInput):
+                css = 'form-check-input'
+            else:
+                css = 'form-control'
+            field.widget.attrs['class'] = css
 
 class RegisterForm(BootstrapFormMixin, UserCreationForm):
     email = forms.EmailField(required=True)

@@ -19,7 +19,9 @@
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav ms-auto align-items-lg-center">
         {% if user.is_authenticated %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'profile' %}">Hi, {{ user.username }}</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'report_lost' %}">Report Lost</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'my_reports' %}">My Reports</a></li>
+          <li class="nav-item"><a class="nav-link me-lg-2" href="{% url 'profile' %}">Hi, {{ user.username }}</a></li>
           <li class="nav-item">
             <form method="post" action="{% url 'logout' %}">
               {% csrf_token %}
