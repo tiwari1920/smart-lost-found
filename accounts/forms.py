@@ -26,3 +26,17 @@ class RegisterForm(BootstrapFormMixin, UserCreationForm):
 
 class LoginForm(BootstrapFormMixin, AuthenticationForm):
     pass
+
+class ProfileForm(BootstrapFormMixin, forms.ModelForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email')
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].lower()
+        # exclude(pk=...) lets you keep your OWN email without an error
+        if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('This email is already used by another account.')
+        return email
