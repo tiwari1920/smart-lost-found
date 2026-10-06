@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-white rounded-3 shadow-sm text-center">
+  <h1 class="display-5 fw-bold">CampusFind</h1>
+  <p class="lead">Lost something on campus? Found something? Let's match them.</p>
+  {% if user.is_authenticated %}
+    <p class="text-muted">You are logged in as <strong>{{ user.username }}</strong>.</p>
+  {% else %}
+    <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-2">Get started</a>
+    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Login</a>
+  {% endif %}
+</div>
+{% endblock %}
