@@ -4,6 +4,11 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
 
+# Admin branding: replaces the default "Django administration"
+admin.site.site_header = f'{settings.SITE_NAME} Administration'
+admin.site.site_title = settings.SITE_TITLE
+admin.site.index_title = 'Admin Dashboard'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='home.html'), name='home'),

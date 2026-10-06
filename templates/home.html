@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="p-5 mb-4 bg-white rounded-3 shadow-sm text-center">
-  <h1 class="display-5 fw-bold">CampusFind</h1>
+  <h1 class="display-5 fw-bold">{{ SITE_TITLE }}</h1>
   <p class="lead">Lost something on campus? Found something? Let's match them.</p>
   {% if user.is_authenticated %}
     <a href="{% url 'report_lost' %}" class="btn btn-danger btn-lg me-2">I lost something</a>

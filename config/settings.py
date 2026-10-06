@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'config.context_processors.site_branding',
             ],
         },
     },
@@ -143,3 +144,9 @@ MESSAGE_TAGS = {messages.ERROR: 'danger'}
 #Uploaded Files (item photos)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ---- Project branding (shown on every page and in the admin) ----
+SITE_NAME = 'CampusFind'
+SITE_TITLE = 'CampusFind by Tiwari'
+SITE_AUTHOR = 'Satyam Tiwari'
+SITE_AUTHOR_EMAIL = 'iamsatyampandit@gmail.com'
