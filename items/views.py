@@ -86,3 +86,25 @@ def item_change_status(request, pk):
         messages.error(request, 'That status is not allowed.')
 
     return redirect('item_detail', pk=item.pk)
+
+@login_required
+def report_found(request):
+    if request.method == 'POST':
+        form = ItemForm(request.POST, request.FILES, item_type=Item.FOUND)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.user = request.user
+            item.item_type = Item.FOUND
+            item.status = Item.FOUND
+            item.save()
+            messages.success(request, 'Your found item report has been saved.')
+            return redirect('item_detail', pk=item.pk)
+    else:
+        form = ItemForm(item_type=Item.FOUND)
+
+    note = ('Describe the item in general terms. Keep one or two special details '
+            '(a serial number, a sticker, what is inside) to yourself. '
+            'They will be used later to check that the real owner is claiming it.')
+
+    return render(request, 'items/item_form.html',
+                  {'form': form, 'heading': 'Report a found item', 'note': note})

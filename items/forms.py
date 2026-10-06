@@ -31,6 +31,15 @@ class ItemForm(BootstrapFormMixin, forms.ModelForm):
             'image': 'Optional. JPG, PNG or WEBP, up to 2 MB.',
         }
 
+    def __init__(self, *args, item_type=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # New report: the view tells us the type. Editing: read it from the saved item.
+        item_type = item_type or self.instance.item_type or Item.LOST
+        verb = 'found' if item_type == Item.FOUND else 'lost'
+        self.fields['location'].label = f'Where was it {verb}?'
+        self.fields['date'].label = f'Date {verb}'
+        self.fields['time'].label = f'Approximate time {verb}'
+
     def clean_date(self):
         date = self.cleaned_data['date']
         if date > timezone.localdate():
