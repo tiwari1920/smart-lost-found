@@ -110,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -139,3 +139,7 @@ LOGOUT_REDIRECT_URL = 'home'
 
 # Make Django's error messages use Bootstrap's red color
 MESSAGE_TAGS = {messages.ERROR: 'danger'}
+
+#Uploaded Files (item photos)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
