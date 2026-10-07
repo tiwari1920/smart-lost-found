@@ -53,3 +53,43 @@ class ItemForm(BootstrapFormMixin, forms.ModelForm):
             if image.size > MAX_IMAGE_MB * 1024 * 1024:
                 raise forms.ValidationError(f'Image is too large. Maximum size is {MAX_IMAGE_MB} MB.')
         return image
+
+
+class ItemFilterForm(BootstrapFormMixin, forms.Form):
+    q = forms.CharField(
+        required=False, label='Search',
+        widget=forms.TextInput(attrs={'placeholder': 'e.g. black earbuds'}),
+    )
+    item_type = forms.ChoiceField(
+        required=False, label='Type',
+        choices=[('', 'Lost & Found')] + Item.TYPE_CHOICES,
+    )
+    category = forms.ChoiceField(
+        required=False,
+        choices=[('', 'All categories')] + Item.CATEGORY_CHOICES,
+    )
+    location = forms.ChoiceField(
+        required=False,
+        choices=[('', 'All locations')] + Item.LOCATION_CHOICES,
+    )
+    status = forms.ChoiceField(
+        required=False,
+        choices=[('', 'Any status')] + Item.STATUS_CHOICES,
+    )
+    color = forms.CharField(required=False, label='Colour')
+    brand = forms.CharField(required=False)
+    date_from = forms.DateField(
+        required=False, label='Date from',
+        widget=forms.DateInput(attrs={'type': 'date'}),
+    )
+    date_to = forms.DateField(
+        required=False, label='Date to',
+        widget=forms.DateInput(attrs={'type': 'date'}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        start, end = cleaned.get('date_from'), cleaned.get('date_to')
+        if start and end and start > end:
+            raise forms.ValidationError('"Date from" cannot be after "Date to".')
+        return cleaned

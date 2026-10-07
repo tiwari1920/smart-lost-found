@@ -1,10 +1,14 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .forms import ItemForm
+from .filters import apply_filters
+from .forms import ItemFilterForm, ItemForm
 from .models import Item
+
+ITEMS_PER_PAGE = 9
 
 
 @login_required
@@ -108,3 +112,28 @@ def report_found(request):
 
     return render(request, 'items/item_form.html',
                   {'form': form, 'heading': 'Report a found item', 'note': note})
+
+@login_required
+def browse_items(request):
+    form = ItemFilterForm(request.GET or None)  # GET: filters stay in the URL
+    items = Item.objects.all()
+
+    if form.is_bound:
+        if form.is_valid():
+            items = apply_filters(items, form.cleaned_data)
+        else:
+            items = items.none()  # invalid filters: show no results, plus the errors
+
+    paginator = Paginator(items, ITEMS_PER_PAGE)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    # Keep the filters when moving between pages (everything except "page")
+    params = request.GET.copy()
+    params.pop('page', None)
+
+    return render(request, 'items/browse.html', {
+        'form': form,
+        'page_obj': page_obj,
+        'total': paginator.count,
+        'query_string': params.urlencode(),
+    })

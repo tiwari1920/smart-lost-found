@@ -7,7 +7,10 @@
   {% if user.is_authenticated %}
     <a href="{% url 'report_lost' %}" class="btn btn-danger btn-lg me-2">I lost something</a>
     <a href="{% url 'report_found' %}" class="btn btn-success btn-lg">I found something</a>
-    <p class="mt-3 mb-0"><a href="{% url 'my_reports' %}">View my reports</a></p>
+    <p class="mt-3 mb-0">
+      <a href="{% url 'browse_items' %}">Browse all reports</a> &middot;
+      <a href="{% url 'my_reports' %}">My reports</a>
+    </p>
   {% else %}
     <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-2">Get started</a>
     <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Login</a>
