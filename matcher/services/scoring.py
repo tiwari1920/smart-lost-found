@@ -38,3 +38,27 @@ def get_label(final_score):
         if final_score >= minimum:
             return label
     return LABELS[-1][1]
+
+PART_NAMES = {
+    'description': 'Description',
+    'category': 'Category',
+    'location': 'Location',
+    'color': 'Colour',
+    'brand': 'Brand',
+    'time': 'Time',
+}
+
+
+def score_breakdown(scores):
+    """One row per part: its similarity, its weight and the points it adds
+    (points = similarity x weight x 100). The points add up to the final score."""
+    rows = []
+    for name, weight in WEIGHTS.items():
+        score = scores.get(name, 0.0)
+        rows.append({
+            'name': PART_NAMES[name],
+            'score': round(score, 2),
+            'weight': round(weight * 100),
+            'points': round(score * weight * 100, 1),
+        })
+    return rows

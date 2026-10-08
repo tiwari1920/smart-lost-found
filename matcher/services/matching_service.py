@@ -10,8 +10,9 @@ from dataclasses import dataclass
 
 from items.models import Item
 
+from .explanations import build_reasons
 from .metadata_similarity import compute_metadata_scores
-from .scoring import calculate_final_score, get_label
+from .scoring import MIN_MATCH_SCORE, calculate_final_score, get_label, score_breakdown
 from .text_similarity import item_text, text_similarities
 
 CLOSED_STATUSES = (Item.RECOVERED, Item.CLOSED)
@@ -28,6 +29,25 @@ class MatchResult:
     def other_item(self, item):
         """The report on the OTHER side of this match, seen from `item`."""
         return self.found if item.pk == self.lost.pk else self.lost
+
+    @property
+    def label_class(self):
+        """Bootstrap colour for the label badge."""
+        return {
+            'Very strong match': 'bg-success',
+            'Strong match': 'bg-primary',
+            'Possible match': 'bg-warning text-dark',
+        }.get(self.label, 'bg-secondary')
+
+    @property
+    def reasons(self):
+        """Plain-English reasons (see explanations.py)."""
+        return build_reasons(self.lost, self.found, self.scores)
+
+    @property
+    def breakdown(self):
+        """Table rows that show how the final score was built."""
+        return score_breakdown(self.scores)
 
 
 def find_matches_for(item, limit=None):
@@ -61,3 +81,8 @@ def find_matches_for(item, limit=None):
 
     results.sort(key=lambda r: r.final_score, reverse=True)
     return results[:limit] if limit else results
+
+
+def find_visible_matches(item):
+    """Only the matches good enough to show a user (score of 40 or more)."""
+    return [r for r in find_matches_for(item) if r.final_score >= MIN_MATCH_SCORE]
