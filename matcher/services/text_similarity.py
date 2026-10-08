@@ -18,24 +18,27 @@ def item_text(item):
     return f'{item.title} {item.description}'
 
 
-def text_similarities(query_text, candidate_texts):
+def text_similarities(query_text, candidate_texts, corpus_texts=None):
     """Compare ONE text with MANY candidate texts.
+
+    corpus_texts: the collection of texts used to LEARN how rare each word is (IDF).
+    If left out, the query and the candidates themselves are used.
     Returns a list of scores, one per candidate, in the same order."""
     candidate_texts = list(candidate_texts)
     if not candidate_texts or not (query_text or '').strip():
         return [0.0] * len(candidate_texts)
 
+    training_texts = list(corpus_texts) if corpus_texts else [query_text] + candidate_texts
     vectorizer = TfidfVectorizer(stop_words=STOP_WORDS, sublinear_tf=True)
     try:
-        # Learn the vocabulary and the word weights (IDF) from ALL texts together,
-        # then turn every text into a vector of numbers.
-        matrix = vectorizer.fit_transform([query_text] + candidate_texts)
+        vectorizer.fit(training_texts)  # learn the vocabulary and how rare each word is
+        query_vector = vectorizer.transform([query_text])
+        candidate_matrix = vectorizer.transform(candidate_texts)
     except ValueError:
         # Raised when every word was a stop word ("empty vocabulary")
         return [0.0] * len(candidate_texts)
 
-    # Row 0 is the query. Compare it with every other row.
-    scores = cosine_similarity(matrix[0], matrix[1:])[0]
+    scores = cosine_similarity(query_vector, candidate_matrix)[0]
     return [round(max(0.0, min(1.0, float(s))), 4) for s in scores]
 
 
