@@ -150,3 +150,9 @@ SITE_NAME = 'CampusFind'
 SITE_TITLE = 'CampusFind by Tiwari'
 SITE_AUTHOR = 'Satyam Tiwari'
 SITE_AUTHOR_EMAIL = 'iamsatyampandit@gmail.com'
+
+import sys
+
+if  'test' in sys.argv:
+    # Fast password hasher only while running tests. The real site keeps the strong one.
+    PASSWORD_HASHERS =      ['django.contrib.auth.hashers.MD5PasswordHasher']

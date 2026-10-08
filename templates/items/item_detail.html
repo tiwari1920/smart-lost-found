@@ -34,6 +34,9 @@
         {% if item.user_id == user.id %}
           <hr>
           <div class="d-flex flex-wrap gap-2">
+            {% if item.status != 'RECOVERED' and item.status != 'CLOSED' %}
+              <a href="{% url 'item_matches' item.pk %}" class="btn btn-primary btn-sm">Potential matches</a>
+            {% endif %}
             <a href="{% url 'item_edit' item.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
             <a href="{% url 'item_delete' item.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
             {% if item.status != 'RECOVERED' and item.status != 'CLOSED' %}

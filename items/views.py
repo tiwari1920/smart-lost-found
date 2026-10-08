@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from matcher.services.matching_service import find_visible_matches
 
 from .filters import apply_filters
 from .forms import ItemFilterForm, ItemForm
@@ -22,6 +23,10 @@ def report_lost(request):
             item.item_type = Item.LOST
             item.status = Item.LOST
             item.save()
+            match_count = len(find_visible_matches(item))  # Run the matching engine
+            if match_count:
+                messages.success(request, f'Report saved. We found {match_count} possible match(es)!')
+                return redirect('item_matches', pk=item.pk)
             messages.success(request, 'Your lost item report has been saved.')
             return redirect('item_detail', pk=item.pk)
     else:
@@ -101,6 +106,11 @@ def report_found(request):
             item.item_type = Item.FOUND
             item.status = Item.FOUND
             item.save()
+            match_count = len(find_visible_matches(item))  # run the matching engine
+            if match_count:
+                messages.success(
+                    request, f'Report saved. We found {match_count} possible match(es)!')
+                return redirect('item_matches', pk=item.pk)
             messages.success(request, 'Your found item report has been saved.')
             return redirect('item_detail', pk=item.pk)
     else:

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Potential Matches | {{ SITE_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h2 class="h4 mb-1">Potential matches</h2>
+    <p class="text-muted mb-0">
+      For your {{ item.get_item_type_display|lower }} report:
+      <a href="{% url 'item_detail' item.pk %}">{{ item.title }}</a>
+      <span class="badge {{ item.status_badge_class }}">{{ item.get_status_display }}</span>
+    </p>
+  </div>
+  <a href="{% url 'my_reports' %}" class="btn btn-outline-secondary btn-sm">My reports</a>
+</div>
+
+<div class="alert alert-info small">
+  The score is a similarity score defined by this project. It compares category,
+  colour, brand, location, time and the words in the description. It is
+  <strong>not</strong> a probability that two items are the same object.
+  Only reports scoring {{ min_score }} or more are shown.
+</div>
+
+{% if not is_open %}
+  <div class="alert alert-secondary">
+    This report is {{ item.get_status_display|lower }}, so it is no longer matched.
+  </div>
+{% elif cards %}
+  {% for card in cards %}
+    {% with result=card.result other=card.other %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-3">
+            <div class="d-flex gap-3">
+              {% if other.image %}
+                <img src="{{ other.image.url }}" alt="Photo of {{ other.title }}"
+                     class="rounded flex-shrink-0"
+                     style="width: 72px; height: 72px; object-fit: cover;">
+              {% endif %}
+              <div>
+                <h3 class="h5 mb-1">
+                  <a href="{% url 'item_detail' other.pk %}" class="text-decoration-none">{{ other.title }}</a>
+                </h3>
+                <p class="small text-muted mb-0">
+                  {{ other.get_item_type_display }} report &middot; {{ other.get_location_display }}
+                  &middot; {{ other.date|date:"d M Y" }} &middot; by {{ other.user.username }}
+                </p>
+              </div>
+            </div>
+            <div class="text-end flex-shrink-0">
+              <div class="fs-3 fw-bold lh-1">{{ result.final_score }}%</div>
+              <span class="badge {{ result.label_class }}">{{ result.label }}</span>
+            </div>
+          </div>
+
+          <div class="progress my-3" style="height: 8px;" role="progressbar"
+               aria-label="Match score" aria-valuenow="{{ result.final_score|floatformat:0 }}"
+               aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar {{ result.label_class }}"
+                 style="--bar-width: {{ result.final_score|floatformat:0 }}%;"></div>
+          </div>
+
+          <ul class="list-unstyled mb-2">
+            {% for reason in result.reasons %}
+              <li class="{% if reason.kind == 'good' %}text-success{% elif reason.kind == 'bad' %}text-danger{% else %}text-muted{% endif %}">
+                {% if reason.kind == 'good' %}&#10003;{% elif reason.kind == 'bad' %}&#10007;{% else %}&ndash;{% endif %}
+                {{ reason.text }}
+              </li>
+            {% endfor %}
+          </ul>
+
+          <a class="small" data-bs-toggle="collapse" href="#breakdown-{{ forloop.counter }}"
+             role="button" aria-expanded="false" aria-controls="breakdown-{{ forloop.counter }}">
+            How was this score calculated?
+          </a>
+          <div class="collapse mt-2" id="breakdown-{{ forloop.counter }}">
+            <table class="table table-sm small mb-0">
+              <thead>
+                <tr><th>Part</th><th>Similarity</th><th>Weight</th><th>Points</th></tr>
+              </thead>
+              <tbody>
+                {% for row in result.breakdown %}
+                  <tr>
+                    <td>{{ row.name }}</td><td>{{ row.score }}</td>
+                    <td>{{ row.weight }}%</td><td>{{ row.points }}</td>
+                  </tr>
+                {% endfor %}
+                <tr class="fw-bold"><td colspan="3">Total (out of 100)</td><td>{{ result.final_score }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-3">
+            <a href="{% url 'item_detail' other.pk %}" class="btn btn-outline-primary btn-sm">View full report</a>
+          </div>
+        </div>
+      </div>
+    {% endwith %}
+  {% endfor %}
+{% else %}
+  <div class="alert alert-warning">
+    <strong>No possible matches yet.</strong>
+    No open report from another user scores {{ min_score }} or more. Matches are
+    checked every time you open this page, so come back after new reports arrive.
+    Adding more detail (brand, colour, marks) can help:
+    <a href="{% url 'item_edit' item.pk %}">edit this report</a>.
+  </div>
+{% endif %}
+{% endblock %}

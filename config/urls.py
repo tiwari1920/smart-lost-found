@@ -14,6 +14,7 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
     path('accounts/', include('accounts.urls')),
     path('items/', include('items.urls')),
+    path('matches/', include('matcher.urls')),
 ]
 
 # While developing, let Django serve uploaded photos from /media/
