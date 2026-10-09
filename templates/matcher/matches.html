@@ -91,8 +91,23 @@
             </table>
           </div>
 
-          <div class="mt-3">
+          <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
             <a href="{% url 'item_detail' other.pk %}" class="btn btn-outline-primary btn-sm">View full report</a>
+
+            {% if card.claim_state == 'active' %}
+              <a href="{% url 'claim_detail' card.claim_match.pk %}" class="btn btn-success btn-sm">Open verification</a>
+            {% elif is_owner_view and card.claim_state == 'available' %}
+              <form method="post" action="{% url 'claim_start' item.pk other.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm">This is mine &ndash; start verification</button>
+              </form>
+            {% elif card.claim_state == 'busy' %}
+              <span class="small text-muted">A claim for one of these reports is already being verified.</span>
+            {% elif card.claim_state == 'rejected' %}
+              <span class="small text-danger">An earlier claim for this item was rejected.</span>
+            {% else %}
+              <span class="small text-muted">Waiting for the owner to claim this item.</span>
+            {% endif %}
           </div>
         </div>
       </div>

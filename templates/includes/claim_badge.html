@@ -1,0 +1,1 @@
+<span class="badge {% if match.status == 'CONFIRMED' %}bg-success{% elif match.status == 'REJECTED' %}bg-danger{% elif match.status == 'WITHDRAWN' %}bg-secondary{% else %}bg-info text-dark{% endif %}">{{ match.get_status_display }}</span>

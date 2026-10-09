@@ -23,6 +23,7 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'report_lost' %}">Report Lost</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'report_found' %}">Report Found</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'my_reports' %}">My Reports</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'claims' %}">Claims</a></li>
           <li class="nav-item"><a class="nav-link me-lg-2" href="{% url 'profile' %}">Hi, {{ user.username }}</a></li>
           <li class="nav-item">
             <form method="post" action="{% url 'logout' %}">

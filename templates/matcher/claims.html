@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Claims | {{ SITE_TITLE }}{% endblock %}
+
+{% block content %}
+<h2 class="h4 mb-1">Claims</h2>
+<p class="text-muted small">Claims you made as an owner, and claims on items you found.</p>
+
+{% if rows %}
+  <div class="list-group shadow-sm">
+    {% for row in rows %}
+      <a href="{% url 'claim_detail' row.match.pk %}"
+         class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+        <div>
+          <div class="fw-semibold">{{ row.match.lost_item.title }} &harr; {{ row.match.found_item.title }}</div>
+          <small class="text-muted">
+            You are the {{ row.role }} &middot; score {{ row.match.final_score }}%
+            &middot; {{ row.match.created_at|date:"d M Y" }}
+          </small>
+        </div>
+        {% include 'includes/claim_badge.html' with match=row.match %}
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    No claims yet. Open <a href="{% url 'my_reports' %}">My reports</a> and check the potential matches.
+  </div>
+{% endif %}
+{% endblock %}

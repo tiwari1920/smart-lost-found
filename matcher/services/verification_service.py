@@ -155,3 +155,42 @@ def withdraw_claim(match, user):
     match.save(update_fields=['status'])
     _reopen_items(match)
     return match
+
+    # ------------------------------------------------------------------ for the pages
+def claim_state(lost, found):
+    """What is the situation for this lost/found pair? Returns (state, match).
+    state is 'active' (a claim exists), 'rejected', 'busy' or 'available'."""
+    pair = Match.objects.filter(lost_item=lost, found_item=found)
+    active = pair.filter(status__in=ACTIVE_STATUSES).first()
+    if active:
+        return 'active', active
+    if pair.filter(status=Match.REJECTED).exists():
+        return 'rejected', None
+    busy = Match.objects.filter(status__in=ACTIVE_STATUSES).filter(
+        Q(lost_item=lost) | Q(found_item=found))
+    if busy.exists():
+        return 'busy', None
+    return 'available', None
+
+
+def available_actions(match, user):
+    """Which buttons should this person see? (The same rules as above.)"""
+    actions = set()
+    if match.status != Match.VERIFICATION_PENDING:
+        return actions
+
+    questions = list(match.verifications.all())
+    has_open = any(q.status == Verification.ASKED for q in questions)
+    has_answer = any(q.status == Verification.ANSWERED for q in questions)
+
+    if user.pk == match.found_item.user_id:          # the finder
+        actions.add('reject')
+        if not has_open and len(questions) < MAX_QUESTIONS:
+            actions.add('ask')
+        if has_answer and not has_open:
+            actions.add('approve')
+    elif user.pk == match.lost_item.user_id:         # the owner
+        actions.add('withdraw')
+        if has_open:
+            actions.add('answer')
+    return actions

@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Verification | {{ SITE_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h2 class="h4 mb-1">Ownership verification</h2>
+    <p class="text-muted mb-0">
+      {% if is_owner %}You are the <strong>owner</strong>{% else %}You are the <strong>finder</strong>{% endif %}
+      &middot; {% include 'includes/claim_badge.html' %}
+    </p>
+  </div>
+  <a href="{% url 'claims' %}" class="btn btn-outline-secondary btn-sm">All claims</a>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <span class="badge bg-danger mb-2">Lost report</span>
+        <h3 class="h6 mb-1">
+          <a href="{% url 'item_detail' match.lost_item.pk %}">{{ match.lost_item.title }}</a>
+        </h3>
+        <p class="small text-muted mb-0">
+          by {{ match.lost_item.user.username }} &middot; {{ match.lost_item.get_location_display }}
+          &middot; {{ match.lost_item.date|date:"d M Y" }}
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <span class="badge bg-success mb-2">Found report</span>
+        <h3 class="h6 mb-1">
+          <a href="{% url 'item_detail' match.found_item.pk %}">{{ match.found_item.title }}</a>
+        </h3>
+        <p class="small text-muted mb-0">
+          by {{ match.found_item.user.username }} &middot; {{ match.found_item.get_location_display }}
+          &middot; {{ match.found_item.date|date:"d M Y" }}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between flex-wrap gap-1">
+      <strong>Why the system suggested this match</strong>
+      <span>{{ match.final_score }}% &middot; {{ match.label }}</span>
+    </div>
+    <ul class="list-unstyled small mb-0 mt-2">
+      {% for reason in reasons %}
+        <li class="{% if reason.kind == 'good' %}text-success{% elif reason.kind == 'bad' %}text-danger{% else %}text-muted{% endif %}">
+          {% if reason.kind == 'good' %}&#10003;{% elif reason.kind == 'bad' %}&#10007;{% else %}&ndash;{% endif %}
+          {{ reason.text }}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h3 class="h6">Private questions</h3>
+
+    {% for v in verifications %}
+      <div class="border rounded p-2 mb-2">
+        <div class="small text-muted">Question {{ forloop.counter }} (from the finder)</div>
+        <div>{{ v.question|linebreaksbr }}</div>
+        {% if v.answer %}
+          <div class="small text-muted mt-2">Answer (from the owner)</div>
+          <div>{{ v.answer|linebreaksbr }}</div>
+        {% else %}
+          <div class="small text-muted mt-2">Waiting for the owner's answer.</div>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p class="text-muted mb-0">No questions yet.</p>
+    {% endfor %}
+
+    {% if 'ask' in can %}
+      <form method="post" action="{% url 'claim_action' match.pk %}" class="mt-3">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="ask">
+        <label for="ask-text" class="form-label fw-semibold">Ask a question</label>
+        <textarea id="ask-text" name="text" rows="2" maxlength="300" class="form-control" required></textarea>
+        <div class="form-text">
+          Ask something only the real owner would know and that you can check on the item
+          (a sticker, a scratch, what is inside, the lock-screen picture). Do not give hints.
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm mt-2">Send question</button>
+      </form>
+    {% endif %}
+
+    {% if 'answer' in can %}
+      <form method="post" action="{% url 'claim_action' match.pk %}" class="mt-3">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="answer">
+        <label for="answer-text" class="form-label fw-semibold">Your answer</label>
+        <textarea id="answer-text" name="text" rows="2" maxlength="300" class="form-control" required></textarea>
+        <button type="submit" class="btn btn-primary btn-sm mt-2">Send answer</button>
+      </form>
+    {% endif %}
+
+    {% if match.status == 'VERIFICATION_PENDING' %}
+      {% if is_owner and 'answer' not in can %}
+        <p class="text-muted mt-2 mb-0">
+          {% if verifications %}Waiting for the finder to review your answer or ask another question.{% else %}Waiting for the finder to ask a private question.{% endif %}
+        </p>
+      {% endif %}
+      {% if not is_owner and open_question %}
+        <p class="text-muted mt-2 mb-0">Waiting for the owner to answer.</p>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+{% if 'approve' in can or 'reject' in can or 'withdraw' in can %}
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    {% if 'approve' in can %}
+      <form method="post" action="{% url 'claim_action' match.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="approve">
+        <button type="submit" class="btn btn-success">Approve claim</button>
+      </form>
+    {% endif %}
+    {% if 'reject' in can %}
+      <form method="post" action="{% url 'claim_action' match.pk %}"
+            onsubmit="return confirm('Reject this claim? This cannot be undone.');">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reject">
+        <button type="submit" class="btn btn-outline-danger">Reject claim</button>
+      </form>
+    {% endif %}
+    {% if 'withdraw' in can %}
+      <form method="post" action="{% url 'claim_action' match.pk %}"
+            onsubmit="return confirm('Withdraw your claim?');">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="withdraw">
+        <button type="submit" class="btn btn-outline-secondary">Withdraw claim</button>
+      </form>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if match.status == 'CONFIRMED' %}
+  <div class="alert alert-success">
+    <strong>Claim approved.</strong> Contact details are shown only to the two of you.
+    <div class="mt-2">
+      {% if is_owner %}Finder{% else %}Owner{% endif %}: <strong>{{ other_user.username }}</strong> &ndash;
+      {% if other_user.email %}<a href="mailto:{{ other_user.email }}">{{ other_user.email }}</a>{% else %}no email on file{% endif %}
+    </div>
+    <div class="small mt-2">
+      Please meet in a public place on campus and check the item before it is handed over.
+    </div>
+  </div>
+{% elif match.status == 'REJECTED' %}
+  <div class="alert alert-danger">The finder rejected this claim. Both reports are open again.</div>
+{% elif match.status == 'WITHDRAWN' %}
+  <div class="alert alert-secondary">The owner withdrew this claim. Both reports are open again.</div>
+{% endif %}
+{% endblock %}
