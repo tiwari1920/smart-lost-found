@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications | {{ SITE_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h4 mb-0">Notifications</h2>
+  {% if unread_notifications %}
+    <form method="post" action="{% url 'mark_all_read' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-secondary btn-sm">Mark all as read</button>
+    </form>
+  {% endif %}
+</div>
+
+{% if notifications %}
+  <div class="list-group shadow-sm">
+    {% for n in notifications %}
+      <div class="list-group-item {% if not n.is_read %}list-group-item-primary{% endif %}">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+          <div>
+            {% if not n.is_read %}<span class="badge bg-primary me-1">New</span>{% endif %}
+            {{ n.message }}
+            {% if n.link %}<a href="{{ n.link }}" class="ms-1">Open</a>{% endif %}
+          </div>
+          <small class="text-muted flex-shrink-0">{{ n.created_at|timesince }} ago</small>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info">
+    No notifications yet. We will tell you here when a strong match appears.
+  </div>
+{% endif %}
+{% endblock %}

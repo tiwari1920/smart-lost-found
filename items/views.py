@@ -4,6 +4,9 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from matcher.services.matching_service import find_visible_matches
+from notifications.services import notify_new_matches
+from matcher.services.verification_service import active_claim_for
+
 
 from .filters import apply_filters
 from .forms import ItemFilterForm, ItemForm
@@ -23,6 +26,7 @@ def report_lost(request):
             item.item_type = Item.LOST
             item.status = Item.LOST
             item.save()
+            notify_new_matches(item)  # Run the matching engine and send notifications
             match_count = len(find_visible_matches(item))  # Run the matching engine
             if match_count:
                 messages.success(request, f'Report saved. We found {match_count} possible match(es)!')
@@ -70,6 +74,11 @@ def item_edit(request, pk):
 def item_delete(request, pk):
     item = get_object_or_404(Item, pk=pk, user=request.user)
 
+    claim = active_claim_for(item)
+    if claim:   # deleting would break the other person's claim
+        messages.error(request, 'This report is part of a claim, so it cannot be deleted. '
+                                'Finish the claim first.')
+        return redirect('claim_detail', pk=claim.pk)
     if request.method == 'POST':
         if item.image:
             item.image.delete(save=False)  # remove the photo file from disk too
@@ -84,6 +93,12 @@ def item_delete(request, pk):
 @require_POST  # only accepts a form submit, never a plain link
 def item_change_status(request, pk):
     item = get_object_or_404(Item, pk=pk, user=request.user)
+
+    claim = active_claim_for(item)
+    if claim:   # the claim page is the only way to finish it
+        messages.error(request, 'This report is part of a claim. '
+                                'Please finish the claim on the claim page.')
+        return redirect('claim_detail', pk=claim.pk)
     new_status = request.POST.get('status')
 
     # Owners may only choose these two. The system sets the others later.
@@ -106,6 +121,7 @@ def report_found(request):
             item.item_type = Item.FOUND
             item.status = Item.FOUND
             item.save()
+            notify_new_matches(item)  # Run the matching engine and send notifications
             match_count = len(find_visible_matches(item))  # run the matching engine
             if match_count:
                 messages.success(

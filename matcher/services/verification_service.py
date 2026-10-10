@@ -176,6 +176,10 @@ def claim_state(lost, found):
 def available_actions(match, user):
     """Which buttons should this person see? (The same rules as above.)"""
     actions = set()
+    if match.status != Match.CONFIRMED:
+        if user.pk in (match.lost_item.user_id, match.found_item.user_id):
+            actions.add('recover')
+        return actions
     if match.status != Match.VERIFICATION_PENDING:
         return actions
 
@@ -194,3 +198,22 @@ def available_actions(match, user):
         if has_open:
             actions.add('answer')
     return actions
+
+def complete_recovery(match, user):
+    """Either person confirms that the item was handed over.
+    Both reports become RECOVERED and the claim is finished."""
+    if user.pk not in (match.lost_item.user_id, match.found_item.user_id):
+        raise ClaimError('Only the two people in this claim can do this.')
+    if match.status != Match.CONFIRMED:
+        raise ClaimError('The claim must be approved before the item can be marked as recovered.')
+    match.status = Match.COMPLETED
+    match.save(update_fields=['status'])
+    _set_status(match.lost_item, Item.RECOVERED)
+    _set_status(match.found_item, Item.RECOVERED)
+    return match
+
+
+def active_claim_for(item):
+    """The pending or approved claim this report belongs to, or None."""
+    return Match.objects.filter(status__in=ACTIVE_STATUSES).filter(
+        Q(lost_item=item) | Q(found_item=item)).first()

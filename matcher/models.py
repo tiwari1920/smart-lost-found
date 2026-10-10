@@ -12,11 +12,13 @@ class Match(models.Model):
     CONFIRMED = 'CONFIRMED'
     REJECTED = 'REJECTED'
     WITHDRAWN = 'WITHDRAWN'
+    COMPLETED = 'COMPLETED'
     STATUS_CHOICES = [
         (VERIFICATION_PENDING, 'Verification pending'),
         (CONFIRMED, 'Confirmed'),
         (REJECTED, 'Rejected'),
         (WITHDRAWN, 'Withdrawn'),
+        (COMPLETED, 'Item recovered'),
     ]
 
     lost_item = models.ForeignKey(

@@ -38,8 +38,10 @@
               <a href="{% url 'item_matches' item.pk %}" class="btn btn-primary btn-sm">Potential matches</a>
             {% endif %}
             <a href="{% url 'item_edit' item.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
-            <a href="{% url 'item_delete' item.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
-            {% if item.status != 'RECOVERED' and item.status != 'CLOSED' %}
+            {% if item.status != 'VERIFICATION_PENDING' %}
+              <a href="{% url 'item_delete' item.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
+            {% endif %}
+            {% if item.status == 'LOST' or item.status == 'FOUND' %}
               <form method="post" action="{% url 'item_change_status' item.pk %}">
                 {% csrf_token %}
                 <input type="hidden" name="status" value="RECOVERED">
@@ -50,6 +52,11 @@
                 <input type="hidden" name="status" value="CLOSED">
                 <button type="submit" class="btn btn-secondary btn-sm">Close report</button>
               </form>
+            {% endif %}
+            {% if item.status == 'VERIFICATION_PENDING' %}
+              <span class="small text-muted align-self-center">
+                This report is part of a claim. Finish it on the <a href="{% url 'claims' %}">Claims</a> page.
+              </span>
             {% endif %}
           </div>
         {% endif %}

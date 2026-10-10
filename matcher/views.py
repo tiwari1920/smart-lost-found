@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from items.models import Item
+from notifications.services import notify_claim_event
 
 from .models import Match, Verification
 from .services.explanations import build_reasons
@@ -18,6 +19,7 @@ from .services.verification_service import (
     ask_question,
     available_actions,
     claim_state,
+    complete_recovery,
     reject_claim,
     start_claim,
     withdraw_claim,
@@ -82,6 +84,8 @@ def claim_start(request, lost_pk, found_pk):
     except ClaimError as error:
         messages.error(request, str(error))
         return redirect('item_matches', pk=lost.pk)
+    notify_claim_event(match, 'started')
+                       
     messages.success(request, 'Claim started. The finder will now ask you a private question.')
     return redirect('claim_detail', pk=match.pk)
 
@@ -113,6 +117,7 @@ ACTIONS = {
                 'Claim approved. Contact details are now visible to both of you.'),
     'reject': (reject_claim, False, 'Claim rejected. Both reports are open again.'),
     'withdraw': (withdraw_claim, False, 'Claim withdrawn. Both reports are open again.'),
+    'recover': (complete_recovery, False, 'Marked as recovered. Both reports are now closed. Thank you for using Smart Lost & Found!'),
 }
 
 
@@ -134,5 +139,6 @@ def claim_action(request, pk):
     except ClaimError as error:
         messages.error(request, str(error))   # e.g. "Only the finder can do this."
     else:
+        notify_claim_event(match, request.POST['action'], actor=request.user)
         messages.success(request, success_message)
     return redirect('claim_detail', pk=match.pk)
