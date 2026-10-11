@@ -176,11 +176,13 @@ def claim_state(lost, found):
 def available_actions(match, user):
     """Which buttons should this person see? (The same rules as above.)"""
     actions = set()
-    if match.status != Match.CONFIRMED:
+
+    if match.status == Match.CONFIRMED:   # approved: either person can confirm the handover
         if user.pk in (match.lost_item.user_id, match.found_item.user_id):
             actions.add('recover')
         return actions
-    if match.status != Match.VERIFICATION_PENDING:
+
+    if match.status != Match.VERIFICATION_PENDING:   # rejected, withdrawn or finished
         return actions
 
     questions = list(match.verifications.all())
