@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'items',
     'matcher',
     'notifications',
+    'dashboard',
 ]
 
 MIDDLEWARE = [

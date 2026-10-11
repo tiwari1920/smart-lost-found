@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard | {{ SITE_TITLE }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <h2 class="h4 mb-0">Admin dashboard</h2>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{% url 'admin:auth_user_changelist' %}" class="btn btn-outline-secondary btn-sm">Users</a>
+    <a href="{% url 'admin:items_item_changelist' %}" class="btn btn-outline-secondary btn-sm">Reports</a>
+    <a href="{% url 'admin:matcher_match_changelist' %}" class="btn btn-outline-secondary btn-sm">Claims</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-2">
+  {% include 'dashboard/stat_card.html' with label='Users' value=stats.users %}
+  {% include 'dashboard/stat_card.html' with label='Lost reports' value=stats.lost_total %}
+  {% include 'dashboard/stat_card.html' with label='Found reports' value=stats.found_total %}
+  {% include 'dashboard/stat_card.html' with label='Recovered items' value=stats.recovered %}
+  {% include 'dashboard/stat_card.html' with label='Recovery rate' value=stats.recovery_rate suffix='%' %}
+  {% include 'dashboard/stat_card.html' with label='Active claims' value=stats.open_claims %}
+</div>
+<p class="text-muted small mb-4">
+  New reports in the last 7 days: <strong>{{ stats.recent_reports }}</strong>.
+  Recovery rate = recovered lost items &divide; all lost reports.
+</p>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h6">Most common categories</h3>
+        {% include 'dashboard/bars.html' with rows=stats.top_categories %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h6">Most common places where items are lost</h3>
+        {% include 'dashboard/bars.html' with rows=stats.top_lost_locations %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h6">Reports by status</h3>
+        <table class="table table-sm mb-0">
+          <tbody>
+            {% for row in stats.status_rows %}
+              <tr><td>{{ row.label }}</td><td class="text-end">{{ row.count }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h6">Claims by status</h3>
+        <table class="table table-sm mb-0">
+          <tbody>
+            {% for row in stats.claim_rows %}
+              <tr><td>{{ row.label }}</td><td class="text-end">{{ row.count }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% for row in rows %}
+  <div class="mb-2">
+    <div class="d-flex justify-content-between small">
+      <span>{{ row.label }}</span><span>{{ row.count }}</span>
+    </div>
+    <div class="progress" style="height: 8px;">
+      <div class="progress-bar" style="--progress-width: {{ row.percent }}%; width: var(--progress-width);"></div>
+    </div>
+  </div>
+{% empty %}
+  <p class="text-muted small mb-0">No data yet.</p>
+{% endfor %}

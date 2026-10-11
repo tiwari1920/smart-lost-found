@@ -16,6 +16,7 @@ urlpatterns = [
     path('items/', include('items.urls')),
     path('matches/', include('matcher.urls')),
     path('notifications/', include('notifications.urls')),
+    path('dashboard/', include('dashboard.urls')),
 ]
 
 # While developing, let Django serve uploaded photos from /media/
