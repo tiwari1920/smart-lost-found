@@ -1,7 +1,7 @@
 """The matching engine: finds and ranks possible matches for ONE report.
 
 Steps for a report X:
-1. Collect candidates: open reports of the OPPOSITE type, from OTHER users.
+1. Collect candidates: open, visible reports of the OPPOSITE type, from OTHER users.
 2. For each candidate compute the six similarity scores.
 3. Combine them into a final score (0-100) and give it a label.
 4. Sort, so the best match comes first.
@@ -51,12 +51,12 @@ class MatchResult:
 
 
 def find_matches_for(item, limit=None):
-    """Rank all open reports of the opposite type against `item`, best first."""
-    if item.status in CLOSED_STATUSES:
-        return []   # a closed report is not matched any more
+    """Rank all open, visible reports of the opposite type against `item`, best first."""
+    if item.status in CLOSED_STATUSES or item.is_hidden:
+        return []   # closed or hidden reports are not matched
 
     opposite_type = Item.FOUND if item.item_type == Item.LOST else Item.LOST
-    open_items = Item.objects.exclude(status__in=CLOSED_STATUSES)
+    open_items = Item.objects.exclude(status__in=CLOSED_STATUSES).filter(is_hidden=False)
     candidates = list(
         open_items.filter(item_type=opposite_type)
         .exclude(user_id=item.user_id)      # never match a user's own reports

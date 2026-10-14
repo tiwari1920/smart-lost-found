@@ -87,6 +87,9 @@ class Item(models.Model):
     status = models.CharField(max_length=25, choices=STATUS_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)  # set once, when created
     updated_at = models.DateTimeField(auto_now=True)      # refreshed on every save
+    # Moderation (set by administrators in the admin site)
+    is_hidden = models.BooleanField(default=False)
+    moderation_note = models.CharField(max_length=200, blank=True)
 
     class Meta:
         ordering = ['-created_at']   # newest first, everywhere

@@ -1,12 +1,13 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from matcher.services.matching_service import find_visible_matches
-from notifications.services import notify_new_matches
-from matcher.services.verification_service import active_claim_for
 
+from matcher.services.matching_service import find_visible_matches
+from matcher.services.verification_service import active_claim_for
+from notifications.services import notify_new_matches
 
 from .filters import apply_filters
 from .forms import ItemFilterForm, ItemForm
@@ -26,10 +27,11 @@ def report_lost(request):
             item.item_type = Item.LOST
             item.status = Item.LOST
             item.save()
-            notify_new_matches(item)  # Run the matching engine and send notifications
-            match_count = len(find_visible_matches(item))  # Run the matching engine
+            notify_new_matches(item)  # tell the owners of strong matches
+            match_count = len(find_visible_matches(item))  # run the matching engine
             if match_count:
-                messages.success(request, f'Report saved. We found {match_count} possible match(es)!')
+                messages.success(
+                    request, f'Report saved. We found {match_count} possible match(es)!')
                 return redirect('item_matches', pk=item.pk)
             messages.success(request, 'Your lost item report has been saved.')
             return redirect('item_detail', pk=item.pk)
@@ -41,14 +43,72 @@ def report_lost(request):
 
 
 @login_required
+def report_found(request):
+    if request.method == 'POST':
+        form = ItemForm(request.POST, request.FILES, item_type=Item.FOUND)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.user = request.user
+            item.item_type = Item.FOUND
+            item.status = Item.FOUND
+            item.save()
+            notify_new_matches(item)  # tell the owners of strong matches
+            match_count = len(find_visible_matches(item))  # run the matching engine
+            if match_count:
+                messages.success(
+                    request, f'Report saved. We found {match_count} possible match(es)!')
+                return redirect('item_matches', pk=item.pk)
+            messages.success(request, 'Your found item report has been saved.')
+            return redirect('item_detail', pk=item.pk)
+    else:
+        form = ItemForm(item_type=Item.FOUND)
+
+    note = ('Describe the item in general terms. Keep one or two special details '
+            '(a serial number, a sticker, what is inside) to yourself. '
+            'They will be used later to check that the real owner is claiming it.')
+
+    return render(request, 'items/item_form.html',
+                  {'form': form, 'heading': 'Report a found item', 'note': note})
+
+
+@login_required
 def my_reports(request):
     items = Item.objects.filter(user=request.user)
     return render(request, 'items/my_reports.html', {'items': items})
 
 
 @login_required
+def browse_items(request):
+    form = ItemFilterForm(request.GET or None)  # GET: filters stay in the URL
+    items = Item.objects.filter(is_hidden=False)  # hidden reports are never listed
+
+    if form.is_bound:
+        if form.is_valid():
+            items = apply_filters(items, form.cleaned_data)
+        else:
+            items = items.none()  # invalid filters: show no results, plus the errors
+
+    paginator = Paginator(items, ITEMS_PER_PAGE)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    # Keep the filters when moving between pages (everything except "page")
+    params = request.GET.copy()
+    params.pop('page', None)
+
+    return render(request, 'items/browse.html', {
+        'form': form,
+        'page_obj': page_obj,
+        'total': paginator.count,
+        'query_string': params.urlencode(),
+    })
+
+
+@login_required
 def item_detail(request, pk):
     item = get_object_or_404(Item, pk=pk)
+    # A hidden report can only be opened by its owner and by administrators
+    if item.is_hidden and item.user_id != request.user.pk and not request.user.is_staff:
+        raise Http404
     return render(request, 'items/item_detail.html', {'item': item})
 
 
@@ -79,6 +139,7 @@ def item_delete(request, pk):
         messages.error(request, 'This report is part of a claim, so it cannot be deleted. '
                                 'Finish the claim first.')
         return redirect('claim_detail', pk=claim.pk)
+
     if request.method == 'POST':
         if item.image:
             item.image.delete(save=False)  # remove the photo file from disk too
@@ -99,6 +160,7 @@ def item_change_status(request, pk):
         messages.error(request, 'This report is part of a claim. '
                                 'Please finish the claim on the claim page.')
         return redirect('claim_detail', pk=claim.pk)
+
     new_status = request.POST.get('status')
 
     # Owners may only choose these two. The system sets the others later.
@@ -110,56 +172,3 @@ def item_change_status(request, pk):
         messages.error(request, 'That status is not allowed.')
 
     return redirect('item_detail', pk=item.pk)
-
-@login_required
-def report_found(request):
-    if request.method == 'POST':
-        form = ItemForm(request.POST, request.FILES, item_type=Item.FOUND)
-        if form.is_valid():
-            item = form.save(commit=False)
-            item.user = request.user
-            item.item_type = Item.FOUND
-            item.status = Item.FOUND
-            item.save()
-            notify_new_matches(item)  # Run the matching engine and send notifications
-            match_count = len(find_visible_matches(item))  # run the matching engine
-            if match_count:
-                messages.success(
-                    request, f'Report saved. We found {match_count} possible match(es)!')
-                return redirect('item_matches', pk=item.pk)
-            messages.success(request, 'Your found item report has been saved.')
-            return redirect('item_detail', pk=item.pk)
-    else:
-        form = ItemForm(item_type=Item.FOUND)
-
-    note = ('Describe the item in general terms. Keep one or two special details '
-            '(a serial number, a sticker, what is inside) to yourself. '
-            'They will be used later to check that the real owner is claiming it.')
-
-    return render(request, 'items/item_form.html',
-                  {'form': form, 'heading': 'Report a found item', 'note': note})
-
-@login_required
-def browse_items(request):
-    form = ItemFilterForm(request.GET or None)  # GET: filters stay in the URL
-    items = Item.objects.all()
-
-    if form.is_bound:
-        if form.is_valid():
-            items = apply_filters(items, form.cleaned_data)
-        else:
-            items = items.none()  # invalid filters: show no results, plus the errors
-
-    paginator = Paginator(items, ITEMS_PER_PAGE)
-    page_obj = paginator.get_page(request.GET.get('page'))
-
-    # Keep the filters when moving between pages (everything except "page")
-    params = request.GET.copy()
-    params.pop('page', None)
-
-    return render(request, 'items/browse.html', {
-        'form': form,
-        'page_obj': page_obj,
-        'total': paginator.count,
-        'query_string': params.urlencode(),
-    })

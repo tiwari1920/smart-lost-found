@@ -219,3 +219,12 @@ def active_claim_for(item):
     """The pending or approved claim this report belongs to, or None."""
     return Match.objects.filter(status__in=ACTIVE_STATUSES).filter(
         Q(lost_item=item) | Q(found_item=item)).first()
+
+def admin_cancel_claim(match):
+    """Staff action: end a pending or approved claim and reopen both reports."""
+    if match.status not in ACTIVE_STATUSES:
+        raise ClaimError('Only pending or approved claims can be cancelled.')
+    match.status = Match.WITHDRAWN
+    match.save(update_fields=['status'])
+    _reopen_items(match)
+    return match

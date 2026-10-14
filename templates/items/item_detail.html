@@ -11,6 +11,12 @@
              alt="Photo of {{ item.title }}" style="max-height: 360px; object-fit: contain;">
       {% endif %}
       <div class="card-body p-4">
+        {% if item.is_hidden %}
+          <div class="alert alert-warning small">
+            This report is <strong>hidden by an administrator</strong> and does not appear in Browse or in matching.
+            {% if item.moderation_note %}Reason: {{ item.moderation_note }}{% endif %}
+          </div>
+          {% endif %}
         <div class="d-flex justify-content-between align-items-start mb-1">
           <h2 class="h4 mb-0">{{ item.title }}</h2>
           <span class="badge {{ item.status_badge_class }}">{{ item.get_status_display }}</span>
