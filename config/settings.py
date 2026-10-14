@@ -158,3 +158,31 @@ import sys
 if  'test' in sys.argv:
     # Fast password hasher only while running tests. The real site keeps the strong one.
     PASSWORD_HASHERS =      ['django.contrib.auth.hashers.MD5PasswordHasher']
+
+
+    # ---------------------------------------------------------------------------
+# Day 13: security hardening
+# ---------------------------------------------------------------------------
+import os
+
+# Never let a browser guess a file type, and never allow the site in a frame (clickjacking).
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Session cookie: not readable by scripts, only sent to this site, expires after 2 weeks.
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
+
+# Refuse huge uploads early (photos are limited to 2 MB by the form; this is a second wall).
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+
+# Settings that only make sense on a real server with HTTPS. They stay OFF on your laptop,
+# because they would break http://127.0.0.1:8000.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.environ.get('CAMPUSFIND_HTTPS', '0') == '1'
+    SESSION_COOKIE_SECURE = SECURE_SSL_REDIRECT
+    CSRF_COOKIE_SECURE = SECURE_SSL_REDIRECT
+    SECURE_HSTS_SECONDS = 31536000 if SECURE_SSL_REDIRECT else 0
