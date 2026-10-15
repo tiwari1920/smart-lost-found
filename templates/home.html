@@ -1,19 +1,34 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-white rounded-3 shadow-sm text-center">
-  <h1 class="display-5 fw-bold">{{ SITE_TITLE }}</h1>
-  <p class="lead">Lost something on campus? Found something? Let's match them.</p>
-  {% if user.is_authenticated %}
-    <a href="{% url 'report_lost' %}" class="btn btn-danger btn-lg me-2">I lost something</a>
-    <a href="{% url 'report_found' %}" class="btn btn-success btn-lg">I found something</a>
-    <p class="mt-3 mb-0">
-      <a href="{% url 'browse_items' %}">Browse all reports</a> &middot;
-      <a href="{% url 'my_reports' %}">My reports</a>
-    </p>
-  {% else %}
-    <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-2">Get started</a>
-    <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Login</a>
-  {% endif %}
-</div>
+<section class="cf-hero">
+  <span class="cf-kicker">&#9679; Smart lost &amp; found for campus</span>
+  <h1 class="cf-title">Lost it? <span>Found it.</span><br>Matched in seconds.</h1>
+  <h2 class="cf-page-title">Browse reports</h2>
+  <p class="cf-lead">Lost something on campus? Found something? Report it. CampusFind ranks the most likely matches, explains why, and hands items back safely after verification.</p>
+
+  <p class="d-flex flex-wrap gap-2 mt-4">
+    {% if user.is_authenticated %}
+      <a class="btn btn-primary btn-lg" href="{% url 'report_lost' %}">I lost something</a>
+      <a class="btn btn-outline-light btn-lg" href="{% url 'report_found' %}">I found something</a>
+      <a class="btn btn-outline-secondary btn-lg" href="{% url 'browse_items' %}">Browse reports</a>
+    {% else %}
+      <a class="btn btn-primary btn-lg" href="{% url 'register' %}">Get started</a>
+      <a class="btn btn-outline-light btn-lg" href="{% url 'login' %}">Login</a>
+    {% endif %}
+  </p>
+
+  <div class="cf-stats">
+    <div class="cf-stat"><b>6</b><small>signals compared</small></div>
+    <div class="cf-stat"><b>0&ndash;100</b><small>explainable score</small></div>
+    <div class="cf-stat"><b>2-step</b><small>verified hand-over</small></div>
+  </div>
+
+  <div class="cf-steps">
+    <div class="cf-step"><span class="n">1</span><h5>Report</h5><p>Describe what you lost or found, with a photo.</p></div>
+    <div class="cf-step"><span class="n">2</span><h5>Match</h5><p>Description, category, place, colour, brand and time are scored.</p></div>
+    <div class="cf-step"><span class="n">3</span><h5>Verify</h5><p>The finder approves your claim before anything is shared.</p></div>
+    <div class="cf-step"><span class="n">4</span><h5>Recover</h5><p>Contact details unlock only after approval. Then you meet and collect.</p></div>
+  </div>
+</section>
 {% endblock %}

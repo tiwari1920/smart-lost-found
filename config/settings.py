@@ -125,7 +125,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
@@ -186,3 +185,5 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = SECURE_SSL_REDIRECT
     CSRF_COOKIE_SECURE = SECURE_SSL_REDIRECT
     SECURE_HSTS_SECONDS = 31536000 if SECURE_SSL_REDIRECT else 0
+
+STATICFILES_DIRS = [BASE_DIR / 'static']
