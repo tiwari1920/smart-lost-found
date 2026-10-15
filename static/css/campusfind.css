@@ -232,3 +232,31 @@ img.rounded, .card-img-top { border-radius: .8rem; }
   .cf-hero::before { opacity: .45; }
   .cf-stats { gap: 1.2rem; }
 }
+
+.cf-footer-plain {
+  margin-top: 3rem;
+  padding: 1.3rem 1rem;
+  border-top: 1px solid var(--cf-line);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .4rem 2.5rem;
+  color: var(--cf-muted);
+  font-size: .85rem;
+}
+.cf-footer-plain strong { color: #fff; }
+.cf-footer-plain a { color: #ff6b77; text-decoration: none; }
+.cf-footer-plain a:hover { color: #fff; text-decoration: underline; }
+
+/* Decorative layers must never block clicks */
+.cf-hero::before,
+.card::before,
+body::before,
+body::after { pointer-events: none; }
+
+/* Keep the navbar above everything, so its links always work */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1040;
+}
